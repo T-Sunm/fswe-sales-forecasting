@@ -1,0 +1,90 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# VSCode and PyCharm settings
+.vscode/
+.idea/
+
+# Mac system files
+.DS_Store
+
+# Environment files
+# environment*.yml
+
+# Data files
+data/*.csv
+data/*.feather
+data/*.xlsx
+
+# Output and figures
+check_data/
+*.log
+
+# Streamlit cache
+.streamlit/
+.cache/
+__pycache__/
+
+# Python log and debug files
+*.log
+*.out
+
+# OS-generated files
+Thumbs.db
+Desktop.ini
+
+# Notebook outputs
+*.nbconvert.ipynb
+/data/data_processed/
+**/*.feather
+
+*.feather
+
+# Shared directory - ignore all large data files
+shared/data/**/*.csv
+shared/data/**/*.feather
+shared/data/**/*.parquet
+shared/models/*.pkl
+shared/logs/*.log
+shared/models
+# UV package manager
+uv.lock
+.venv/
+backend/.venv/
+frontend/.venv/
+
+shared/notebooks/survey_data.csv
