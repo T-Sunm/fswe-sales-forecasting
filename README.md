@@ -4,7 +4,7 @@
 
 This repository defines an integrated sales forecasting system resolving the Walmart Recruiting II Sales in Stormy Weather analytical challenge. The defining problem requires predictive algorithms to quantify how severe meteorological phenomena influence the purchasing velocity of weather-sensitive retail inventory across diverse geographic locations. The foundational training data originates directly from the official Kaggle competition registry [//www.kaggle.com/competitions/walmart-recruiting-sales-in-stormy-weather].
 
-The technical implementation unifies a centralized data warehouse methodology with a structured Machine Learning Operations pipeline. The infrastructure relies on PostgreSQL as the foundational Relational Database Management System. Data Build Tool executes structured query logic to map raw inputs into analytical dimensional models. The machine learning sequence incorporates MLflow for framework registration tracking alongside Optuna for mathematical hyperparameter optimization. A FastAPI application serves inference payloads. A Streamlit graphical interface visualizes Explainable Artificial Intelligence interpretations.
+The technical implementation unifies a centralized data warehouse methodology with a structured Machine Learning Operations pipeline. The infrastructure relies on PostgreSQL as the foundational Relational Database Management System. Data Build Tool executes structured query logic to map raw inputs into analytical dimensional models. The machine learning sequence incorporates Optuna for mathematical hyperparameter optimization. A FastAPI application serves inference payloads. A Streamlit graphical interface visualizes Explainable Artificial Intelligence interpretations.
 
 ## Architectural Hierarchy
 
@@ -42,7 +42,7 @@ The implementation requires specific host libraries.
 * A container runtime environment
 * Python version 3.10 and above
 * The uv package manager
-* Free network ports spanning 5432 for database access and 5000 for metric tracking
+* Free network ports spanning 5432 for database access
 * Free network ports spanning 8000 for backend routing and 8501 for frontend display
 
 ### Execution Sequence
@@ -55,12 +55,7 @@ cd data_platform/infra/postgres
 docker compose up -d
 ```
 
-Step 2. Launch the MLflow tracking service.
-```bash
-mlflow server --host 127.0.0.1 --port 5000
-```
-
-Step 3. Execute the data extraction and training routines.
+Step 2. Execute the data extraction and training routines.
 ```bash
 cd ml
 uv run python scripts/prepare_data.py
@@ -68,13 +63,13 @@ uv run python scripts/tune.py
 uv run python scripts/train.py --best-params outputs/best_params.json
 ```
 
-Step 4. Initialize the FastAPI backend service.
+Step 3. Initialize the FastAPI backend service.
 ```bash
 cd backend
 uv run fastapi dev src/api/main.py --port 8000
 ```
 
-Step 5. Launch the Streamlit visualization interface.
+Step 4. Launch the Streamlit visualization interface.
 ```bash
 cd frontend
 uv run streamlit run src/app.py
@@ -91,14 +86,13 @@ The application authenticates using variables located within the root environmen
 | POSTGRES_DB | Target database namespace |
 | POSTGRES_HOST | Database host network address |
 | POSTGRES_PORT | Database communication port |
-| MLFLOW_TRACKING_URI | Network path mapping the metric logging server |
 
 ## Strategic Decisions
 
 The system topology reflects precise engineering decisions.
 
 * PostgreSQL and Data Build Tool. PostgreSQL provides a standard relational engine simplifying data persistence. Data Build Tool guarantees idempotency and testability for SQL transformations.
-* MLflow and Optuna. MLflow standardizes the aggregation of evaluation metrics across experiment runs. Optuna applies mathematical optimization techniques to replace exhaustive grid search matrices.
+* Optuna. Optuna applies mathematical optimization techniques to replace exhaustive grid search matrices.
 * FastAPI and Streamlit. FastAPI implements asynchronous task execution supporting simultaneous client connections. Streamlit facilitates the mathematical translation of Explainable Artificial Intelligence matrices into visual representation charts.
 
 ## Navigation Guide
