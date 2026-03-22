@@ -1,3 +1,4 @@
+-- depends_on: {{ ref('stg_sales') }}
 with sales_with_totals as (
     select 
         *,

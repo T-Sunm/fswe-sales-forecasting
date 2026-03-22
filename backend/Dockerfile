@@ -28,6 +28,11 @@ FROM python:3.10-slim AS runtime
 
 WORKDIR /app
 
+# Cài runtime libs cần cho LightGBM
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Non-root user để tăng bảo mật
 RUN groupadd -g 1001 appgroup && \
     useradd -u 1001 -g appgroup -s /bin/bash -m appuser

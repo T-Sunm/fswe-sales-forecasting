@@ -1,15 +1,16 @@
+-- depends_on: {{ ref('stg_weather') }}
 
-
-{%- set numeric_cols = [
+{% set numeric_cols = [
   'tmax', 'tmin', 'tavg', 'depart', 'dewpoint', 'wetbulb', 'heat', 'cool',
   'sunrise', 'sunset', 'snowfall', 'preciptotal', 'stnpressure', 'sealevel',
   'resultspeed', 'resultdir', 'avgspeed'
-] -%}
+] %}
 
-{%- set weather_codes = [
+{% set weather_codes = [
   'RA', 'SN', 'FG', 'BR', 'UP', 'TS', 'HZ',
   'DZ', 'SQ', 'FZ', 'MI', 'PR', 'BC', 'BL', 'VC'
-] -%}
+] %}
+
 
 with station_means as (
   select

@@ -19,7 +19,7 @@ services:
       - DEBUG=False
     volumes:
       # Mount shared/ (models & data) từ root project vào container
-      - ./shared:/app/shared:ro
+      - ./shared:/shared
     networks:
       - app-network
       - data_pipeline_net   # join network chung với PostgreSQL

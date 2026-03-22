@@ -5,7 +5,7 @@ with source as (
 
 cleaned_numeric as (
     select
-        station_id,
+        station_nbr as station_id,
         cast(date as date) as date,
         
         {{ clean_weather_numeric('tmax') }} as tmax,

@@ -1,3 +1,5 @@
+-- depends_on: {{ ref('stg_sales') }}
+-- depends_on: {{ ref('int_weather_features') }}
 {{ config(materialized='table') }}
 
 with bounds as (

@@ -1,3 +1,4 @@
+-- depends_on: {{ ref('stg_weather') }}
 {{ config(materialized='table') }}
 
 with cleaned_numeric as (

@@ -38,7 +38,7 @@ services:
 networks:
   postgres:
     driver: bridge
-  data_network: # use same network with spark and minio
+  data_network:
     external: true
     name: data_pipeline_net
 

@@ -1,3 +1,4 @@
+-- depends_on: {{ ref('stg_sales') }}
 {{ config(materialized='table') }}
 
 select distinct
