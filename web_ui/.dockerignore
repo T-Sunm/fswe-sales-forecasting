@@ -1,0 +1,34 @@
+# Virtual environments
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Secrets & env files
+.env
+.env.*
+!.env.example
+
+# Streamlit secrets — không bake vào image, dùng env vars hoặc volume mount
+.streamlit/secrets.toml
+
+# IDE & editor
+.vscode/
+.idea/
+*.swp
+
+# Git
+.git/
+.gitignore
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+.ruff_cache/
+.mypy_cache/
+
+# Logs
+*.log

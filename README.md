@@ -8,17 +8,17 @@ The technical implementation unifies a centralized data warehouse methodology wi
 
 ## Architectural Hierarchy
 
-![System Integration Architecture](assets/main.png)
+![System Integration Architecture](images/main.png)
 
 The physical distribution of files reflects stringent structural separation defining specific operational scopes.
 
 ```text
 sales_forecasting_xai/
 ├── backend/                # Application Programming Interface network endpoints
-├── data_platform/          # Database runtime and analytical query formulation
+├── data_pipeline/          # Database runtime and analytical query formulation
 │   ├── dbt/                # Data Build Tool dimensional transformations
 │   └── infra/              # Virtual container orchestration definitions
-├── frontend/               # Graphical interface application elements
+├── web_ui/               # Graphical interface application elements
 ├── ml/                     # Machine learning algorithms and tuning matrices
 └── shared/                 # Centralized parameter targets and temporary local storage
 ```
@@ -27,11 +27,11 @@ The operational domains enforce strict capability boundaries.
 
 | Directory Module | Evaluated Capability |
 |---|---|
-| data_platform | Database infrastructure provisioning alongside analytical logic aggregation |
+| data_pipeline | Database infrastructure provisioning alongside analytical logic aggregation |
 | ml | Predictive algorithm mathematical training and modeling configurations |
 | shared | Global variable assignments enforcing parameter inheritance |
 | backend | Endpoint mapping logic distributing trained model inferences |
-| frontend | Graphical translation protocols analyzing interpretation patterns |
+| web_ui | Graphical translation protocols analyzing interpretation patterns |
 
 ## Deployment Strategy
 
@@ -51,7 +51,7 @@ The deployment must follow a strictly defined initialization matrix.
 
 Step 1. Instantiate the PostgreSQL persistent storage.
 ```bash
-cd data_platform/infra/postgres
+cd data_pipeline/infra/postgres
 docker compose up -d
 ```
 
@@ -71,7 +71,7 @@ uv run fastapi dev src/api/main.py --port 8000
 
 Step 4. Launch the Streamlit visualization interface.
 ```bash
-cd frontend
+cd web_ui
 uv run streamlit run src/app.py
 ```
 

@@ -93,6 +93,6 @@ uv run python scripts/train.py --best-params outputs/best_params.json
 
 | Location | Coverage Context |
 |---|---|
-| [../data_platform/dbt/README.md](../data_platform/dbt/README.md) | Outlines how analytical feature tables are computationally constructed and materialized. |
+| [../data_pipeline/dbt/README.md](../data_pipeline/dbt/README.md) | Outlines how analytical feature tables are computationally constructed and materialized. |
 | [../backend/README.md](../backend/README.md) | Details how the API service dynamically locates and hosts the MLflow registered model. |
 | [../README.md](../README.md) | Specifies Root system overview, extensive architectural topologies, and infrastructure strategies. |

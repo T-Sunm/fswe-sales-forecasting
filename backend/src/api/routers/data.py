@@ -1,6 +1,6 @@
 """
 Data Router
-Endpoints for serving data to frontend (JSON format for HTML/CSS/JS compatibility)
+Endpoints for serving data to web_ui (JSON format for HTML/CSS/JS compatibility)
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query

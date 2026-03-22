@@ -62,7 +62,7 @@ To provision this mandatory storage layer, initialize the monolithic PostgreSQL 
 
 ```powershell
 # Spin up the Data Platform database
-cd ../data_platform/infra/postgres
+cd ../data_pipeline/infra/postgres
 docker-compose up -d
 ```
 

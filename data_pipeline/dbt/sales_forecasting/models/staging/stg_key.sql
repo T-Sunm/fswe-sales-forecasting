@@ -1,0 +1,1 @@
+select store_id, station_id from {{ source('raw', 'stg_key') }}
