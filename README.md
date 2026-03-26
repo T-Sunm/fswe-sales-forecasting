@@ -47,15 +47,13 @@ The implementation requires specific host libraries.
 
 ### Execution Sequence
 
-The deployment must follow a strictly defined initialization matrix.
-
-Step 1. Instantiate the PostgreSQL persistent storage.
+Step 1. Start PostgreSQL.
 ```bash
 cd data_pipeline/infra/postgres
 docker compose up -d
 ```
 
-Step 2. Execute the data extraction and training routines.
+Step 2. Prepare data and train the model.
 ```bash
 cd ml
 uv run python scripts/prepare_data.py
@@ -63,17 +61,13 @@ uv run python scripts/tune.py
 uv run python scripts/train.py --best-params outputs/best_params.json
 ```
 
-Step 3. Initialize the FastAPI backend service.
+Step 3. Start backend and frontend from the project root.
 ```bash
-cd backend
-uv run fastapi dev src/api/main.py --port 8000
+docker compose up -d
 ```
 
-Step 4. Launch the Streamlit visualization interface.
-```bash
-cd web_ui
-uv run streamlit run src/app.py
-```
+- Backend API: `http://localhost:8000` — docs at `/docs`
+- Dashboard: `http://localhost:8501`
 
 ## Environment Configuration
 
