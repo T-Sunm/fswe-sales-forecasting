@@ -1,0 +1,44 @@
+# Virtual environments
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyc
+*.pyz
+
+# Secrets & env files (không bake vào image)
+.env
+.env.*
+!.env.example
+
+# Test files
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+.ruff_cache/
+.mypy_cache/
+
+# Logs
+*.log
+
+# Shared directory (mount qua volume, không COPY vào image)
+# Chú ý: shared/ ở root project, không ở đây

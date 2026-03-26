@@ -1,0 +1,74 @@
+services:
+  # ============================================================
+  # Backend: FastAPI + uvicorn
+  # ============================================================
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    image: fswe-backend:latest
+    container_name: fswe-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      # Trỏ tới postgres_container qua data_pipeline_net
+      # DB: sales_forecasting, schema: raw (init bởi init_sales_forecasting.py)
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@postgres_container:5432/sales_forecasting
+      - DEBUG=False
+    volumes:
+      # Mount shared/ (models & data) từ root project vào container
+      - ./shared:/shared
+    networks:
+      - app-network
+      - data_pipeline_net   # join network chung với PostgreSQL
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ============================================================
+  # Web UI: Streamlit
+  # ============================================================
+  web_ui:
+    build:
+      context: ./web_ui
+    image: fswe-web-ui:latest
+    container_name: fswe-web-ui
+    ports:
+      - "8501:8501"
+    env_file:
+      - ./web_ui/.env
+    environment:
+      # Dùng tên service "backend" thay vì localhost
+      - API_BASE_URL=http://backend:8000
+      - DEBUG=False
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  # Internal network cho backend ↔ web_ui
+  app-network:
+    driver: bridge
+
+  # External network của data_pipeline (postgres chạy ở đây)
+  # Tạo trước bằng: docker network create data_pipeline_net
+  # Hoặc chạy data_pipeline/infra/postgres/docker-compose.yml trước
+  data_pipeline_net:
+    external: true
+    name: data_pipeline_net
+
