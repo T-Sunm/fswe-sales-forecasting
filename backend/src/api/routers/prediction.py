@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException
 from src.core.model import ModelManager, PredictionInput, PredictionOutput
 from src.api.dependencies import get_model_manager, get_feature_data
@@ -37,7 +38,8 @@ async def predict(
     data: pd.DataFrame = Depends(get_feature_data)
 ):
     """Core logic dự đoán."""
-    result = manager.predict(
+    result = await asyncio.to_thread(
+        manager.predict,
         store_id=store_id,
         item_id=item_id,
         prediction_input=input_data,

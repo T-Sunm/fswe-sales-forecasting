@@ -21,7 +21,6 @@ FEATURE_DATA_PATH = TRAIN_DATA_PATH
 FEATURE_STATS_JSON = SHARED_DIR / "models" / "feature_stats.json"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-DEBUG_MODE = os.getenv("DEBUG", "True").lower() == "true"
 
 COL_STORE_ID = "store_id"
 COL_ITEM_ID = "item_id"

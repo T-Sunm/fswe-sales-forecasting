@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Query, HTTPException
 from typing import Optional, List, Any
 import pandas as pd
@@ -8,23 +9,23 @@ from src.utils.db_manager import run_query
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 # ── PostgreSQL table names (marts schema — dbt output layer) ───────────────────
-_FACT = "marts.fact_sales_item_daily"          # grain: date × store_id × item_id
+MART_FACT = "marts.fact_sales_item_daily"       # grain: date × store_id × item_id
 
 # Aggregated views built inline via CTEs
-_DATE_SALES = f"""(
+CTE_DATE_SALES = f"""(
     SELECT date,
            SUM(units)  AS total_units,
            COUNT(*)    AS sales_records
-    FROM {_FACT}
+    FROM {MART_FACT}
     GROUP BY date
 )"""
 
-_STORE_DAY = f"""(
+CTE_STORE_DAY = f"""(
     SELECT date,
            store_id,
            SUM(units)  AS total_units,
            COUNT(*)    AS sales_records
-    FROM {_FACT}
+    FROM {MART_FACT}
     GROUP BY date, store_id
 )"""
 
@@ -32,14 +33,14 @@ _STORE_DAY = f"""(
 @router.get("/filters")
 async def get_dashboard_filters():
     """Get initial filter values (date range, stores)"""
-    date_bounds = run_query(
-        f"SELECT MIN(date) as min_date, MAX(date) as max_date FROM {_FACT}"
+    date_bounds = await asyncio.to_thread(
+        run_query, f"SELECT MIN(date) as min_date, MAX(date) as max_date FROM {MART_FACT}"
     )
     if date_bounds.empty:
         raise HTTPException(503, "No data available in fact_sales_item_daily")
 
-    stores_df = run_query(
-        f"SELECT DISTINCT store_id FROM {_STORE_DAY} t ORDER BY store_id"
+    stores_df = await asyncio.to_thread(
+        run_query, f"SELECT DISTINCT store_id FROM {CTE_STORE_DAY} t ORDER BY store_id"
     )
     return {
         "min_date": str(date_bounds["min_date"].iloc[0]),
@@ -52,12 +53,13 @@ async def get_dashboard_filters():
 async def get_items(store_id: Optional[int] = None):
     """Get items, optionally filtered by store"""
     if store_id is None:
-        items_df = run_query(
-            f"SELECT DISTINCT item_id FROM {_FACT} ORDER BY item_id"
+        items_df = await asyncio.to_thread(
+            run_query, f"SELECT DISTINCT item_id FROM {MART_FACT} ORDER BY item_id"
         )
     else:
-        items_df = run_query(
-            f"SELECT DISTINCT item_id FROM {_FACT} WHERE store_id = %s ORDER BY item_id",
+        items_df = await asyncio.to_thread(
+            run_query,
+            f"SELECT DISTINCT item_id FROM {MART_FACT} WHERE store_id = %s ORDER BY item_id",
             (store_id,)
         )
     return {"items": items_df["item_id"].tolist()}
@@ -71,15 +73,16 @@ async def get_kpis(
 ):
     """Calculate KPI metrics for the given range"""
     if store_id is None:
-        grain_table = _DATE_SALES
+        grain_table = CTE_DATE_SALES
         where_clause = "date BETWEEN %s AND %s"
         base_params = (start_date, end_date)
     else:
-        grain_table = _STORE_DAY
+        grain_table = CTE_STORE_DAY
         where_clause = "store_id = %s AND date BETWEEN %s AND %s"
         base_params = (store_id, start_date, end_date)
 
-    dates = run_query(
+    dates = await asyncio.to_thread(
+        run_query,
         f"SELECT MIN(date) as mn, MAX(date) as mx FROM {grain_table} t WHERE {where_clause}",
         base_params
     )
@@ -120,11 +123,12 @@ async def get_kpis(
         """
         kpi_params = (mid_d, mid_d, store_id, start_date, end_date)
 
-    kpi_df = run_query(query, kpi_params)
+    kpi_df = await asyncio.to_thread(run_query, query, kpi_params)
     if kpi_df.empty:
         return {"total_units": 0, "avg_daily": 0}
 
-    days_df = run_query(
+    days_df = await asyncio.to_thread(
+        run_query,
         f"SELECT COUNT(DISTINCT date) as cnt FROM {grain_table} t WHERE {where_clause}",
         base_params
     )
@@ -171,7 +175,7 @@ async def get_trends(
         """
         params = (store_id, start_date, end_date)
 
-    df = run_query(query, params)
+    df = await asyncio.to_thread(run_query, query, params)
     return {"data": df.to_dict(orient="records")}
 
 
@@ -183,18 +187,21 @@ async def get_performance(
 ):
     """Top 10 items and stores"""
     if store_id:
-        top_items = run_query(
-            f"SELECT item_id, SUM(units) as units FROM {_FACT} WHERE date BETWEEN %s AND %s AND store_id = %s GROUP BY item_id ORDER BY units DESC LIMIT 10",
+        top_items = await asyncio.to_thread(
+            run_query,
+            f"SELECT item_id, SUM(units) as units FROM {MART_FACT} WHERE date BETWEEN %s AND %s AND store_id = %s GROUP BY item_id ORDER BY units DESC LIMIT 10",
             (start_date, end_date, store_id)
         )
     else:
-        top_items = run_query(
-            f"SELECT item_id, SUM(units) as units FROM {_FACT} WHERE date BETWEEN %s AND %s GROUP BY item_id ORDER BY units DESC LIMIT 10",
+        top_items = await asyncio.to_thread(
+            run_query,
+            f"SELECT item_id, SUM(units) as units FROM {MART_FACT} WHERE date BETWEEN %s AND %s GROUP BY item_id ORDER BY units DESC LIMIT 10",
             (start_date, end_date)
         )
 
-    top_stores = run_query(
-        f"SELECT store_id, SUM(units) as units FROM {_FACT} WHERE date BETWEEN %s AND %s GROUP BY store_id ORDER BY units DESC LIMIT 10",
+    top_stores = await asyncio.to_thread(
+        run_query,
+        f"SELECT store_id, SUM(units) as units FROM {MART_FACT} WHERE date BETWEEN %s AND %s GROUP BY store_id ORDER BY units DESC LIMIT 10",
         (start_date, end_date)
     )
     return {
@@ -227,7 +234,7 @@ async def compare_products(
         """
         params = (start_date, end_date)
 
-    df = run_query(query, params)
+    df = await asyncio.to_thread(run_query, query, params)
     return {"data": df.to_dict(orient="records")}
 
 
@@ -252,9 +259,12 @@ async def get_distribution(
     where = " AND ".join(conditions)
     bound = tuple(params_list)
 
-    df1 = run_query(f"SELECT units FROM {_FACT} WHERE {where} LIMIT 10000", bound)
-    df2 = run_query(
-        f"SELECT store_id, TO_CHAR(date, 'YYYY-MM-DD') as date, SUM(units) as store_day_units FROM {_FACT} WHERE {where} GROUP BY store_id, date",
+    df1 = await asyncio.to_thread(
+        run_query, f"SELECT units FROM {MART_FACT} WHERE {where} LIMIT 10000", bound
+    )
+    df2 = await asyncio.to_thread(
+        run_query,
+        f"SELECT store_id, TO_CHAR(date, 'YYYY-MM-DD') as date, SUM(units) as store_day_units FROM {MART_FACT} WHERE {where} GROUP BY store_id, date",
         bound
     )
 

@@ -3,6 +3,7 @@ XAI (Explainable AI) Router
 Endpoints for SHAP-based model explanations
 """
 
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -63,7 +64,9 @@ async def get_global_importance(
         X_sample = store_item_data
 
     X_values = X_sample[feature_names].values
-    shap_values, expected_value = xai_explainer.compute_shap_values(raw_model, X_values, feature_names)
+    shap_values, expected_value = await asyncio.to_thread(
+        xai_explainer.compute_shap_values, raw_model, X_values, feature_names
+    )
 
     feature_importance = xai_explainer.get_feature_importance(shap_values, feature_names)
     category_summary = xai_explainer.get_category_summary(feature_importance)
@@ -118,7 +121,9 @@ async def get_dependence(
         X_sample = store_item_data
 
     X_values = X_sample[feature_names].values
-    shap_values, _ = xai_explainer.compute_shap_values(raw_model, X_values, feature_names)
+    shap_values, _ = await asyncio.to_thread(
+        xai_explainer.compute_shap_values, raw_model, X_values, feature_names
+    )
 
     return xai_explainer.get_dependence_data(
         shap_values, X_sample[feature_names], feature, interaction_feature
@@ -181,7 +186,9 @@ async def get_local_explanation(
         X_sample = store_item_data.sort_values("date", ascending=False).head(1)
 
     X_values = X_sample[feature_names].values
-    shap_values, expected_value = xai_explainer.compute_shap_values(raw_model, X_values, feature_names)
+    shap_values, expected_value = await asyncio.to_thread(
+        xai_explainer.compute_shap_values, raw_model, X_values, feature_names
+    )
 
     explanation = xai_explainer.get_local_explanation(
         shap_values, expected_value, X_sample[feature_names], 0, request.top_n

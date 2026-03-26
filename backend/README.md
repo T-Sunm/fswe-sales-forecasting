@@ -1,69 +1,114 @@
 # Backend API Service
 
-This directory comprises the FastAPI-based backend web service orchestrating the deployment of the machine learning predictive models and the generation of SHapley Additive exPlanations (SHAP) for transparent, Explainable AI (XAI) insights.
+FastAPI service for sales forecasting inference and explainable AI (XAI) via SHAP.
 
-## Core Features
+## Features
 
-- **Predictive Inference API:** Serve deterministic sales forecasts utilizing the trained LightGBM algorithm.
-- **Explainable AI (XAI) API:** Deliver SHAP-derived local and global feature importance metrics to elucidate and interpret model decision boundaries.
-- **System Telemetry:** Standardized health-check endpoints for real-time service operability monitoring.
+- **Prediction** — Sales forecasts using a trained LightGBM model loaded from the filesystem.
+- **XAI** — SHAP-based local and global feature importance, with Gemini AI natural-language summaries.
+- **Analytics** — Aggregated sales and inventory queries from the `marts` layer in PostgreSQL.
+- **Health** — Service liveness endpoint.
 
 ---
 
-## 🚀 Quick Start Guide
+## Project Structure
 
-### 1. Environment & Dependency Initialization
+```
+backend/
+├── src/
+│   ├── api/
+│   │   ├── main.py           # FastAPI app, middleware, router registration
+│   │   ├── dependencies.py   # Shared dependencies (DB session, model)
+│   │   ├── schemas.py        # Pydantic request/response models
+│   │   └── routers/
+│   │       ├── prediction.py # POST /api/v1/predict
+│   │       ├── xai.py        # GET  /api/v1/xai/*
+│   │       ├── analytics.py  # GET  /api/v1/analytics/*
+│   │       ├── data.py       # GET  /api/v1/data/*
+│   │       ├── models.py     # GET  /api/v1/models
+│   │       └── health.py     # GET  /health
+│   ├── core/
+│   │   ├── model.py          # LightGBM loader from shared/models/
+│   │   ├── forecasting.py    # Recursive forecasting logic
+│   │   └── xai_explainer.py  # SHAP explainer + Gemini summarization
+│   ├── data_loader/          # PostgreSQL connection & queries
+│   └── config.py             # Settings and constants
+├── run.py                    # Uvicorn entry point
+├── pyproject.toml
+└── .env.example
+```
 
-Ensure the local Python environment is systematically synchronized via `uv`:
+---
 
-```powershell
+## Quick Start
+
+### 1. Install dependencies
+
+```bash
 uv sync
 ```
 
-### 2. MLflow Tracking Server Configuration
+### 2. Configure environment
 
-The execution runtime dynamically fetches the predictive artifacts from the MLflow Model Registry, specifically resolving the `@champion` alias. Consequently, the local MLflow server must be actively listening (defaulting to port `5000`) prior to backend initialization to prevent critical connection timeouts during the model instantiation phase.
+```bash
+cp .env.example .env
+```
 
-Deploy the tracking server from the adjacent `ml/` directory:
+| Variable         | Description                    | Default     |
+|------------------|--------------------------------|-------------|
+| `GEMINI_API_KEY` | Google Gemini API key (XAI)    | *(required)*|
+| `DEBUG`          | Enable debug mode              | `False`     |
+| `API_HOST`       | Bind host                      | `0.0.0.0`  |
+| `API_PORT`       | API port                       | `8000`      |
+| `SECRET_KEY`     | Signing secret                 | *(change me)*|
+| `DATABASE_URL`   | PostgreSQL connection string   | `postgresql://postgres:changeme@localhost:5432/sales_forecasting` |
 
-```powershell
-# Navigate from the backend directory to ml
+### 3. Prepare model artifacts
+
+The API loads the model directly from the shared filesystem — no model registry required.
+
+```
+shared/
+└── models/
+    ├── lgbm_baseline.pkl    # Trained LightGBM model
+    └── feature_stats.json   # Feature statistics for preprocessing
+```
+
+If these files are missing, run the training pipeline first:
+
+```bash
 cd ../ml
-mlflow server --backend-store-uri sqlite:///mlflow.db --host 127.0.0.1 --port 5000
+uv run python scripts/train.py
 ```
 
-> **Crucial Dependency:** The MLflow registry must contain a registered model designated `sales-forecasting-lgbm` exhibiting a valid `@champion` alias. If the database is inherently empty, manually trigger the model training pipeline first:
-> ```powershell
-> cd ../ml
-> uv run python scripts/train.py
-> ```
+### 4. Start PostgreSQL
 
-### 3. Application Server Execution
-
-Launch the ASGI web server (`uvicorn`) to host the FastAPI application.
-
-```powershell
-# Utilizing the bundled execution script
-python run.py
-
-# Or via Uvicorn CLI directly:
-uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-The auto-generated, interactive OpenAPI schema documentation (Swagger UI) is natively exposed at: `http://localhost:8000/docs`.
-
----
-
-## 🗄️ Data Platform Prerequisites
-
-The backend mandates downstream access to curated analytical datasets to execute dynamic aggregations and contextual data delivery. In the streamlined ELT architecture, PostgreSQL acts as the definitive data warehouse, securely persisting the dimensional models (`marts` layer) generated by dbt. 
-
-To provision this mandatory storage layer, initialize the monolithic PostgreSQL database from the infrastructure stack:
-
-```powershell
-# Spin up the Data Platform database
+```bash
 cd ../data_pipeline/infra/postgres
 docker-compose up -d
 ```
 
-Guaranteeing the operational status of the PostgreSQL container is critical, as any ad-hoc data queries dispatched via API endpoints will securely resolve against these materialized relational tables.
+### 5. Run the API
+
+```bash
+# From the backend/ directory
+python run.py
+
+# Or directly via uvicorn:
+uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Interactive docs available at: `http://localhost:8000/docs`
+
+---
+
+## API Endpoints
+
+| Method | Path                      | Description                            |
+|--------|---------------------------|----------------------------------------|
+| `GET`  | `/health`                 | Service liveness check                 |
+| `POST` | `/api/v1/predict`         | Generate a sales forecast              |
+| `GET`  | `/api/v1/xai/local`       | SHAP local explanation for a prediction|
+| `GET`  | `/api/v1/xai/global`      | SHAP global feature importance         |
+| `GET`  | `/api/v1/analytics/*`     | Aggregated sales and inventory data    |
+| `GET`  | `/api/v1/models`          | Info about the currently loaded model  |
